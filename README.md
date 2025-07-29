@@ -284,13 +284,13 @@ This project is open-sourced under the [LICENSE](LICENSE) license.
 
 欢迎对互联网广告系统感兴趣的开发者参与贡献！
 
-- GitHub: [https://github.com/lornshrimp/lorn.adsp](https://github.com/lornshrimp/lorn.adsp)
+- GitHub: [https://github.com/lornshrimp/lorn.adsp.rust](https://github.com/lornshrimp/lorn.adsp.rust)
 
 ## Contact Information
 
 Developers interested in internet advertising systems are welcome to contribute!
 
-- GitHub: [https://github.com/lornshrimp/lorn.adsp](https://github.com/lornshrimp/lorn.adsp)
+- GitHub: [https://github.com/lornshrimp/lorn.adsp.rust](https://github.com/lornshrimp/lorn.adsp.rust)
 
 ## 关于作者
 
