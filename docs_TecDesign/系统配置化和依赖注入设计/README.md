@@ -1,16 +1,18 @@
 # 系统配置化和依赖注入设计
 
-本目录包含 Lorn.ADSP 广告平台的统一配置化和依赖注入架构设计文档。
+本目录包含 Lorn.ADSP-Rust 广告平台的统一配置化和依赖注入架构设计文档。
 
 ## 设计目标
 
-为解决当前系统中配置和依赖注入实现分散、缺乏统一规范的问题，设计一个基于微软 Microsoft.Extensions.* 组件的统一架构，实现：
+为解决当前系统中配置和依赖注入实现分散、缺乏统一规范的问题，设计一个基于 Rust 生态系统的统一架构，实现：
 
-- **统一性**：所有组件使用相同的配置和注册模式
-- **可扩展性**：支持动态发现和注册新组件，无需修改现有代码  
-- **可配置性**：通过配置文件控制组件行为，无需重编译
-- **可监控性**：内置健康检查和性能监控能力
-- **可测试性**：基于接口的松耦合设计，便于单元测试
+- **统一性**：所有组件使用相同的配置和注册模式，基于trait系统
+- **可扩展性**：支持编译时发现和注册新组件，零运行时开销  
+- **可配置性**：通过配置文件控制组件行为，支持热重载
+- **可监控性**：内置健康检查和性能监控能力，基于metrics和tracing
+- **可测试性**：基于trait的松耦合设计，便于单元测试和Mock
+- **内存安全**：基于Rust所有权模型，编译时保证内存安全
+- **高性能**：零成本抽象和异步优先设计
 
 ## 文档结构
 
@@ -18,24 +20,24 @@
 
 **主要架构设计文档**，包含：
 
-- **设计原则**：约定优于配置、元数据驱动、组合优于继承
-- **架构设计**：整体架构视图和核心抽象接口设计
-- **组件模型**：组件分类体系和元数据模型
-- **配置模型**：分层配置架构和配置约定规范
-- **依赖注入设计**：服务注册策略和生命周期管理
-- **可扩展性设计**：插件化架构和扩展点设计
-- **监控诊断设计**：健康检查和指标收集体系
-- **实施策略**：分阶段实施计划和技术风险控制
+- **设计原则**：零成本抽象、类型安全、异步优先、trait驱动
+- **架构设计**：整体架构视图和核心trait接口设计
+- **组件模型**：基于trait的组件分类体系和元数据模型
+- **配置模型**：基于serde的分层配置架构和约定规范
+- **依赖注入设计**：基于Rust所有权的服务注册和生命周期管理
+- **可扩展性设计**：基于宏的插件化架构和编译时扩展点
+- **监控诊断设计**：基于tracing和metrics的健康检查体系
+- **实施策略**：分阶段实施计划和Rust生态集成策略
 
 ### [统一扩展方法实现示例.md](./统一扩展方法实现示例.md)
 
 **具体实现指导文档**，提供：
 
-- **问题分析**：现有扩展方法的局限性和改进需求
-- **统一基础设施**：核心抽象接口、组件元数据、注册构建器
-- **改进实现**：数据访问、策略组件、定向计算器的统一扩展方法
-- **使用示例**：应用程序配置、组件实现、配置文件标准化
-- **代码重构**：从旧架构到新架构的迁移示例和对比
+- **问题分析**：现有Rust组件注册的局限性和改进需求
+- **统一基础设施**：核心trait接口、组件元数据、注册宏系统
+- **改进实现**：数据访问、策略组件、定向计算器的统一trait实现
+- **使用示例**：应用程序配置、组件实现、TOML配置文件标准化
+- **代码重构**：从分散实现到统一trait架构的迁移示例和对比
 
 ### [实施计划.md](./实施计划.md)
 
@@ -51,65 +53,69 @@
 
 **快速实施方案**，提供：
 
-- 基于微软组件的最小化实现
+- 基于Rust生态系统的最小化实现
 - **1-2天快速搭建**的实用指南
-- 完整的代码示例和配置模板
+- 完整的Rust代码示例和TOML配置模板
 
 ## 核心设计亮点
 
-### 基础设施导向的架构设计
+### 基于Rust生态的架构设计
 
-**配置管理是具体实现，不是抽象接口**：
+**配置管理基于serde和config crate**：
 
-- 提供开箱即用的 `AdSystemConfigurationManager`
-- 基于约定自动绑定所有 `*Options` 类到对应配置节
-- 支持多配置源（JSON、环境变量、数据库等）
-- 配置热重载和自动验证
+- 提供开箱即用的 `AdSystemConfiguration`
+- 基于约定自动绑定所有 `*Config` 结构体到对应配置节
+- 支持多配置源（TOML、JSON、环境变量、Consul等）
+- 配置热重载和编译时验证
 
-**依赖注入是智能组装器，不是业务扩展点**：
+**依赖注入基于trait系统和所有权模型**：
 
-- 提供智能的 `ComponentRegistrationManager`
-- 基于约定自动发现和注册所有组件
-- 自动推断组件生命周期和配置绑定
-- 零代码修改的组件扩展
+- 提供智能的 `ServiceRegistry`
+- 基于trait约束自动发现和注册所有组件
+- 编译时生命周期检查和配置绑定
+- 零运行时开销的组件扩展
 
-**约定优于配置的零配置设计**：
+**约定优于配置的零成本抽象设计**：
 
-- `UserInterestRecallStrategy` 自动注册为 `IAdProcessingStrategy`
-- `AdEngineOptions` 自动绑定到 `"AdEngine"` 配置节
-- 以 `Manager`、`Service` 结尾的类自动注册为单例
-- 实现 `IHealthCheckable` 的组件自动添加健康检查
+- `UserInterestRecallStrategy` 自动注册为 `AdProcessingStrategy` trait对象
+- `AdEngineConfig` 自动绑定到 `"ad_engine"` 配置节
+- 以 `Manager`、`Service` 结尾的结构体自动注册为单例
+- 实现 `HealthCheckable` trait的组件自动添加健康检查
 
 ### 真正的可扩展性
 
-**零配置扩展**：
+**零成本扩展**：
 
-- 新增组件：创建类 → 实现接口 → 自动发现注册
-- 新增配置：创建 `*Options` 类 → 自动绑定配置节
-- 修改配置：编辑配置文件 → 自动热重载
+- 新增组件：创建结构体 → 实现trait → 编译时自动发现注册
+- 新增配置：创建 `*Config` 结构体 → 自动绑定配置节
+- 修改配置：编辑TOML文件 → 自动热重载
 
 **一键初始化**：
 
-```csharp
+```rust
 // 使用者只需要一行代码
-services.AddAdSystemInfrastructure(configuration);
+let app = AdSystemApplication::builder()
+    .with_config(config)
+    .build()
+    .await?;
 ```
 
-### 基于微软生态的实现
+### 基于Rust生态的实现
 
 **核心技术栈**：
 
-- Microsoft.Extensions.Hosting - 应用程序宿主
-- Microsoft.Extensions.DependencyInjection - 依赖注入
-- Microsoft.Extensions.Configuration - 配置管理
-- Microsoft.Extensions.Options - 强类型配置
-- Microsoft.Extensions.HealthChecks - 健康检查
+- tokio - 异步运行时和应用程序宿主
+- config + serde - 配置管理和序列化
+- tracing - 结构化日志和分布式追踪
+- metrics - 指标收集和监控
+- axum - Web框架和健康检查端点
+- anyhow/thiserror - 错误处理
 
 **预期效益**：
 
-- **减少开发量 80%**：基于约定的零配置开发
-- **提高系统稳定性**：基于成熟的微软组件
-- **降低学习成本**：标准化的.NET开发模式
+- **减少开发量 80%**：基于约定的零成本抽象开发
+- **提高系统性能**：编译时优化和零运行时开销
+- **保证内存安全**：编译时内存安全检查，无垃圾回收
 - **简化运维管理**：统一的配置和监控方式
 
 ## 实际应用效果
@@ -118,59 +124,80 @@ services.AddAdSystemInfrastructure(configuration);
 
 **添加新的广告策略**：
 
-```csharp
-// 1. 创建策略类（自动发现和注册）
-public class NewAdStrategy : IAdProcessingStrategy 
-{
-    // 2. 配置会自动注入
-    public NewAdStrategy(IOptions<NewAdStrategyOptions> options) { }
-    
+```rust
+// 1. 创建策略结构体（编译时自动发现和注册）
+#[derive(Component)]
+pub struct NewAdStrategy {
+    config: NewAdStrategyConfig,
+}
+
+// 2. 实现策略trait
+#[async_trait]
+impl AdProcessingStrategy for NewAdStrategy {
     // 3. 只需实现业务逻辑
-    public Task<ProcessingResult> ProcessAsync(...) { }
-}
-
-// 4. 创建配置类（自动绑定到 "Strategies:NewAd" 配置节）
-public class NewAdStrategyOptions 
-{
-    public int MaxCandidates { get; set; } = 100;
-}
-
-// 5. 在配置文件中添加配置（支持热重载）
-{
-  "Strategies": {
-    "NewAd": {
-      "MaxCandidates": 200
+    async fn process(&self, context: &AdContext) -> Result<ProcessingResult> {
+        // 业务逻辑实现
     }
-  }
 }
+
+// 4. 创建配置结构体（自动绑定到 "strategies.new_ad" 配置节）
+#[derive(Debug, Clone, Deserialize)]
+pub struct NewAdStrategyConfig {
+    #[serde(default = "default_max_candidates")]
+    pub max_candidates: usize,
+}
+
+fn default_max_candidates() -> usize { 100 }
+
+// 5. 在TOML配置文件中添加配置（支持热重载）
+[strategies.new_ad]
+max_candidates = 200
 ```
 
-**无需任何注册代码！** 一切都是自动的。
+**无需任何注册代码！** 一切都是编译时自动的。
 
 ## 适用场景
 
 ### 广告引擎系统
 
-- 策略集合的动态组装和配置
-- 竞价算法的可插拔实现
+- 策略集合的编译时组装和运行时配置
+- 竞价算法的可插拔trait实现
 - 实时配置调整和热重载
 
 ### 数据访问层
 
-- 数据提供者的注册和路由
+- 数据提供者的trait注册和路由
 - 连接池和缓存的统一管理
-- 数据源的动态切换
+- 多云数据源的动态切换
 
 ### 定向系统
 
-- 定向计算器的动态注册
+- 定向计算器的trait动态注册
 - 定向规则的配置化管理
 - 算法优先级的动态调整
 
+### 微服务架构
+
+- 基于Cargo工作空间的模块化配置
+- 服务间的配置共享和隔离
+- 跨服务的trait接口标准化
+
+### 策略引擎
+
+- 召回、筛选、排序策略的动态加载
+- 管道配置的热重载
+- 策略参数的运行时调整
+
+### 多云基础设施
+
+- 云平台特定的配置管理
+- 运行时云平台选择
+- 配置的环境隔离
+
 ### 其他业务模块
 
-- 任何需要配置驱动和动态扩展的组件
-- 插件式功能模块
-- 微服务化组件
+- 任何需要配置驱动和编译时扩展的组件
+- 基于trait的插件式功能模块
+- 微服务化组件的统一管理
 
-这个设计将为 Lorn.ADSP 广告平台提供一个现代化、可扩展、易维护的统一配置和依赖注入基础架构。
+这个设计将为 Lorn.ADSP-Rust 广告平台提供一个高性能、内存安全、可扩展、易维护的统一配置和依赖注入基础架构。
