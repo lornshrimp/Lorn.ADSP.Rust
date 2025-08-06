@@ -16,12 +16,17 @@ local.properties
 .settings/
 .loadpath
 .github/
+.cursor/
 视频课程/
 免费专栏/
 收费专栏/
 .vscode/
 .sarif/
 .kiro/
+.superdesign/
+CLAUDE.md
+.windsurfrules
+.roomodes
 
 # External tool builders
 .externalToolBuilders/
@@ -227,3 +232,42 @@ pip-log.txt
 $tf/
 packages/
 .fake
+
+#############
+## Rust
+#############
+
+# Cargo build artifacts
+target/
+Cargo.lock
+
+# IDE files
+*.rs.bk
+*.orig
+
+# Rust analyzer
+.rust-analyzer/
+
+# Cargo cache
+.cargo/
+
+# Test artifacts
+*.profraw
+
+# Debugging
+*.dSYM/
+*.dSYM.zip
+*.pdb
+
+# WebAssembly
+*.wasm
+pkg/
+wasm-pack.log
+
+# Tauri specific
+src-tauri/target/
+src-tauri/Cargo.lock
+
+# Generated files
+bindgen/
+**/bindings.rs
