@@ -1,0 +1,28 @@
+[package]
+name = "infrastructure-common"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Common infrastructure traits and utilities for Lorn ADSP"
+homepage.workspace = true
+repository.workspace = true
+readme = "README.md"
+
+[dependencies]
+async-trait.workspace = true
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+once_cell.workspace = true
+dashmap.workspace = true
+parking_lot.workspace = true
+
+[lib]
+name = "infrastructure_common"
+path = "src/lib.rs"

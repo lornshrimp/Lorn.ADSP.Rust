@@ -1,0 +1,27 @@
+[package]
+name = "example-app"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+authors = ["Lorn"]
+license = "MIT"
+description = "Example application demonstrating Lorn ADSP infrastructure"
+
+[[bin]]
+name = "example-app"
+path = "src/main.rs"
+
+[dependencies]
+infrastructure-common = { path = "../crates/05-infrastructure/common" }
+config-abstractions = { path = "../crates/05-infrastructure/config-abstractions" }
+config-impl = { path = "../crates/05-infrastructure/config-impl" }
+di-abstractions = { path = "../crates/05-infrastructure/di-abstractions" }
+infrastructure-composition = { path = "../crates/05-infrastructure/composition" }
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+anyhow = "1.0"
+clap = { version = "4.0", features = ["derive"] }
+async-trait = "0.1"

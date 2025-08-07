@@ -1,0 +1,15 @@
+[package]
+name = "component-discovery-demo"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+component-macros = { path = "../../crates/09-tools/component-macros" }
+infrastructure-common = { path = "../../crates/05-infrastructure/common" }
+infrastructure-composition = { path = "../../crates/05-infrastructure/composition" }
+di-abstractions = { path = "../../crates/05-infrastructure/di-abstractions" }
+async-trait = "0.1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tokio = { version = "1.0", features = ["full"] }
+rand = "0.8"

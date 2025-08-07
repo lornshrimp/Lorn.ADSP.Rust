@@ -1,0 +1,66 @@
+# 示例应用配置文件
+# 此文件演示了 Lorn ADSP 配置系统的使用
+
+[app]
+name = "Lorn ADSP 示例应用"
+version = "0.1.0"
+port = 8080
+worker_threads = 4
+
+[database]
+host = "localhost"
+port = 5432
+database = "lorn_adsp"
+username = "postgres"
+password = "your_password_here"
+max_connections = 20
+
+[services]
+[services.example_service]
+enabled = true
+timeout_seconds = 30
+retry_count = 5
+
+[logging]
+level = "info"
+format = "json"
+file_enabled = true
+file_path = "logs/app.log"
+file_rotation = "daily"
+
+[monitoring]
+enabled = true
+port = 9090
+path = "/metrics"
+
+[health_check]
+enabled = true
+interval_seconds = 30
+timeout_seconds = 5
+
+[cache]
+type = "redis"
+host = "localhost"
+port = 6379
+database = 0
+max_connections = 10
+timeout_seconds = 5
+
+[message_queue]
+type = "rabbitmq"
+host = "localhost"
+port = 5672
+username = "guest"
+password = "guest"
+vhost = "/"
+exchange = "adsp.exchange"
+
+[security]
+jwt_secret = "your_jwt_secret_here"
+token_expiry_hours = 24
+rate_limit_per_minute = 100
+
+[performance]
+max_request_size_mb = 50
+request_timeout_seconds = 30
+keep_alive_timeout_seconds = 60

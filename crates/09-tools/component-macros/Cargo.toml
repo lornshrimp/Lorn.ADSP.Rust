@@ -1,0 +1,21 @@
+[package]
+name = "component-macros"
+version = "0.1.0"
+edition = "2021"
+description = "编译时组件注册过程宏"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro2.workspace = true
+quote.workspace = true
+syn.workspace = true
+infrastructure-common = { path = "../../05-infrastructure/common" }
+ctor.workspace = true
+
+[dependencies.serde]
+workspace = true
+
+[dependencies.tokio]
+workspace = true

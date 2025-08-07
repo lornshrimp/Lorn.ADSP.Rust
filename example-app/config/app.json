@@ -1,0 +1,38 @@
+{
+    "app": {
+        "name": "Lorn ADSP 示例应用 (JSON)",
+        "version": "0.1.0",
+        "port": 8081,
+        "worker_threads": 6
+    },
+    "database": {
+        "host": "localhost",
+        "port": 5432,
+        "database": "lorn_adsp_json",
+        "username": "postgres",
+        "password": "json_password",
+        "max_connections": 15
+    },
+    "services": {
+        "example_service": {
+            "enabled": true,
+            "timeout_seconds": 25,
+            "retry_count": 3
+        }
+    },
+    "logging": {
+        "level": "debug",
+        "format": "pretty",
+        "file_enabled": false
+    },
+    "monitoring": {
+        "enabled": true,
+        "port": 9091,
+        "path": "/health"
+    },
+    "health_check": {
+        "enabled": true,
+        "interval_seconds": 20,
+        "timeout_seconds": 3
+    }
+}

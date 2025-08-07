@@ -1,0 +1,191 @@
+[workspace]
+resolver = "2"
+
+members = [
+    # 表示层 (暂时注释掉，还未实现)
+    # "crates/01-presentation/web-api",
+    # "crates/01-presentation/web-admin", 
+    # "crates/01-presentation/web-advertiser",
+    # "crates/01-presentation/desktop-monitor",
+    
+    # 微服务层 (暂时注释掉，还未实现)
+    # "crates/02-services/ad-engine",
+    # "crates/02-services/bidding",
+    # "crates/02-services/targeting", 
+    # "crates/02-services/creative",
+    # "crates/02-services/campaign",
+    # "crates/02-services/analytics",
+    # "crates/02-services/reporting",
+    # "crates/02-services/gateway",
+    
+    # 策略引擎层 (暂时注释掉，还未实现)
+    # "crates/03-strategies/recall",
+    # "crates/03-strategies/filter",
+    # "crates/03-strategies/ranking",
+    # "crates/03-strategies/common",
+    
+    # 关键核心层 (暂时注释掉，还未实现)
+    # "crates/04-core/domain",
+    # "crates/04-core/application", 
+    # "crates/04-core/shared",
+    # "crates/04-core/ad-engine-abstractions",
+    
+    # 基础设施层
+    "crates/05-infrastructure/config-abstractions",
+    "crates/05-infrastructure/config-impl",
+    "crates/05-infrastructure/di-abstractions", 
+    "crates/05-infrastructure/di-impl",
+    "crates/05-infrastructure/composition",
+    "crates/05-infrastructure/common",
+    # "crates/05-infrastructure/data-abstractions",
+    # "crates/05-infrastructure/data-mysql",
+    # "crates/05-infrastructure/data-postgresql",
+    # "crates/05-infrastructure/caching-abstractions",
+    # "crates/05-infrastructure/caching-redis",
+    # "crates/05-infrastructure/messaging-abstractions",
+    # "crates/05-infrastructure/messaging-kafka",
+    # "crates/05-infrastructure/messaging-rabbitmq",
+    # "crates/05-infrastructure/cloud-abstractions",
+    # "crates/05-infrastructure/cloud-alibaba",
+    # "crates/05-infrastructure/cloud-azure", 
+    # "crates/05-infrastructure/cloud-aws",
+    
+    # 外部集成层 (暂时注释掉，还未实现)
+    # "crates/06-external/openrtb",
+    # "crates/06-external/vast",
+    # "crates/06-external/dsp",
+    # "crates/06-external/ssp",
+    
+    # 客户端SDK层 (暂时注释掉，还未实现)
+    # "crates/07-client-sdk/shared",
+    # "crates/07-client-sdk/ui-shared",
+    # "crates/07-client-sdk/tauri",
+    # "crates/07-client-sdk/yew",
+    # "crates/07-client-sdk/typescript",
+    
+    # 测试项目 (暂时注释掉，还未实现)
+    # "crates/08-tests/unit",
+    # "crates/08-tests/integration",
+    # "crates/08-tests/performance", 
+    # "crates/08-tests/e2e",
+    # "crates/08-tests/strategy",
+    
+    # 工具项目 (暂时注释掉，还未实现)
+    # "crates/09-tools/data-migration",
+    # "crates/09-tools/load-testing",
+    # "crates/09-tools/deployment",
+    # "crates/09-tools/code-generation",
+    "crates/09-tools/component-macros",
+    
+    # 演示包
+    "examples/demo-package",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021" 
+rust-version = "1.75"
+authors = ["Lorn ADSP Team <team@lorn-adsp.com>"]
+license = "MIT"
+description = "Lorn ADSP - Advanced Ad Serving Platform in Rust"
+homepage = "https://github.com/lornshrimp/Lorn.ADSP.Rust"
+repository = "https://github.com/lornshrimp/Lorn.ADSP.Rust"
+readme = "README.md"
+keywords = ["advertising", "rtb", "adtech", "openrtb"]
+categories = ["web-programming", "api-bindings"]
+
+[workspace.dependencies]
+# 异步运行时和Web框架
+tokio = { version = "1.35", features = ["full"] }
+tokio-util = "0.7"
+async-trait = "0.1"
+futures = "0.3"
+axum = { version = "0.7", features = ["tokio", "tower", "tracing"] }
+tower = { version = "0.4", features = ["full"] }
+tower-http = { version = "0.5", features = ["full"] }
+hyper = { version = "1.0", features = ["full"] }
+
+# 序列化和配置
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+toml = "0.8"
+config = { version = "0.14", features = ["toml", "json", "yaml"] }
+
+# 数据库和ORM
+sea-orm = { version = "0.12", features = ["sqlx-postgres", "sqlx-mysql", "runtime-tokio-rustls", "macros"] }
+sqlx = { version = "0.7", features = ["postgres", "mysql", "runtime-tokio-rustls", "chrono", "uuid"] }
+redis = { version = "0.24", features = ["tokio-comp", "connection-manager"] }
+
+# 日志和监控
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+tracing-opentelemetry = "0.22"
+opentelemetry = { version = "0.21", features = ["rt-tokio"] }
+opentelemetry-jaeger = "0.20"
+metrics = "0.22"
+metrics-exporter-prometheus = "0.13"
+
+# 错误处理
+thiserror = "1.0"
+anyhow = "1.0"
+eyre = "0.6"
+
+# 时间和UUID
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.6", features = ["v4", "serde"] }
+
+# 工具
+clap = { version = "4.4", features = ["derive"] }
+once_cell = "1.19"
+lazy_static = "1.4"
+parking_lot = "0.12"
+dashmap = "5.5"
+
+# 文件监控
+notify = "6.1"
+
+# 缓存和消息队列
+rdkafka = { version = "0.36", features = ["cmake-build"] }
+lapin = "2.3"
+
+# 云服务SDK
+aws-sdk-s3 = "1.8"
+azure_storage = "0.19"
+aliyun-oss-client = "0.5"
+
+# 前端相关
+yew = { version = "0.21", features = ["csr"] }
+tauri = { version = "1.5", features = ["api-all"] }
+wasm-bindgen = "0.2"
+web-sys = "0.3"
+
+# 测试
+criterion = { version = "0.5", features = ["html_reports"] }
+mockall = "0.12"
+wiremock = "0.5"
+
+# OpenRTB 相关
+reqwest = { version = "0.11", features = ["json", "rustls-tls"] }
+url = "2.4"
+
+# 过程宏
+proc-macro2 = "1.0"
+quote = "1.0"
+syn = { version = "2.0", features = ["full"] }
+ctor = "0.2"
+
+# 内容安全
+secrecy = "0.8"
+argon2 = "0.5"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+rust_2018_idioms = "deny"
+
+[workspace.lints.clippy]
+all = "warn"
+nursery = "warn"
+cargo = "warn"
+pedantic = "warn"
