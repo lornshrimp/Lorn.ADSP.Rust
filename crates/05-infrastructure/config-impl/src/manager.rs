@@ -6,7 +6,7 @@ use config_abstractions::{
     ConfigManager, ConfigOptionDescriptor, ConfigProvider, ConfigValidator, TypedConfigBinder,
 };
 use infrastructure_common::{ConfigError, ConfigSection, Configurable};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::Value;
 use std::any::TypeId;
 use std::collections::HashMap;

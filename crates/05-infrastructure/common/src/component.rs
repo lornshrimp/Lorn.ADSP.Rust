@@ -6,7 +6,6 @@ use async_trait::async_trait;
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use std::fmt::Debug;
-use std::sync::Arc;
 
 /// 组件基础 trait
 /// 

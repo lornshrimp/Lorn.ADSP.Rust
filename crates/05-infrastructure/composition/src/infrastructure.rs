@@ -9,7 +9,6 @@ use infrastructure_common::{
     HealthCheckable, HealthStatus, InfrastructureError, Component, DependencyError,
 };
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{info, error};

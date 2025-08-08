@@ -1,9 +1,5 @@
 //! 基础设施构建器
 
-use crate::component_scanner::{
-    ComponentDiscoveryStrategy, ComponentScannerBuilder, ComponentScannerImpl,
-};
-use crate::config_sources::{ConfigSourceManagerBuilder, ExtendedConfigSourceManager};
 use crate::infrastructure::AdSystemInfrastructure;
 use config_abstractions::ConfigProvider;
 use config_impl::providers::{
@@ -135,14 +131,14 @@ impl InfrastructureBuilder {
     }
 
     /// 启用扩展配置源管理
-    pub fn with_extended_config_sources(mut self) -> Self {
+    pub fn with_extended_config_sources(self) -> Self {
         info!("启用扩展配置源管理");
         // 在未来的版本中，这里会集成 ExtendedConfigSourceManager
         self
     }
 
     /// 启用高级组件扫描
-    pub fn with_advanced_component_scanning(mut self) -> Self {
+    pub fn with_advanced_component_scanning(self) -> Self {
         info!("启用高级组件扫描");
         // 在未来的版本中，这里会集成 ComponentScannerImpl
         self

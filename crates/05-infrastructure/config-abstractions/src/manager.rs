@@ -7,7 +7,6 @@ use serde_json::Value;
 use crate::provider::ConfigProvider;
 use crate::validator::ConfigValidator;
 use std::any::TypeId;
-use std::sync::Arc;
 
 /// 配置管理器 trait
 /// 

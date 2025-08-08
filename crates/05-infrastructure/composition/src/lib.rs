@@ -19,10 +19,6 @@
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     // 创建并配置基础设施
 //!     let infrastructure = InfrastructureBuilder::new()
-//!         .add_toml_config("config.toml")?
-//!         .add_environment_config(Some("ADSP_".to_string()))
-//!         .enable_component_scanning()
-//!         .enable_health_checks(true)
 //!         .build()
 //!         .await?;
 //!

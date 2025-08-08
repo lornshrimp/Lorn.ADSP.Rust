@@ -7,7 +7,7 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
-use tracing::{debug, error, warn};
+use tracing::debug;
 
 /// TOML 配置提供者
 #[derive(Debug)]

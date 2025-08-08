@@ -20,5 +20,4 @@ pub mod watcher;
 pub use manager::*;
 pub use providers::*;
 pub use validation::*;
-pub use binder::*;
 pub use watcher::*;

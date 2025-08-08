@@ -8,7 +8,6 @@ use config_impl::providers::{
 };
 use infrastructure_common::{InfrastructureError, ConfigError};
 use std::path::Path;
-use std::sync::Arc;
 use tokio::fs;
 use tracing::{info, debug, warn};
 

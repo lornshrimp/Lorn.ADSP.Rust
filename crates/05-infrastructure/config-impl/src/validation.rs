@@ -6,7 +6,6 @@ use config_abstractions::validator::ValidationResult;
 use infrastructure_common::ConfigError;
 use std::any::TypeId;
 use std::collections::HashMap;
-use std::sync::Arc;
 use tracing::{debug, info, warn};
 
 /// 配置验证管理器实现

@@ -2,8 +2,6 @@
 //!
 //! 提供依赖注入容器的核心抽象
 
-use crate::registry::ComponentRegistry;
-use crate::resolver::{ComponentResolver, ResolveContext};
 use crate::factory::ComponentFactory;
 use crate::scanner::ComponentScanner;
 use crate::discovery::ComponentDiscovery;

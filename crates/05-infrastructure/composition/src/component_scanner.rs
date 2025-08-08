@@ -2,10 +2,10 @@
 //! 
 //! 提供自动化的组件发现、注册和管理能力
 
-use di_abstractions::{ComponentScanner, DiContainer};
+use di_abstractions::ComponentScanner;
 use di_impl::DiContainerImpl;
 use infrastructure_common::{
-    Component, InfrastructureError, DependencyError, ComponentMetadata,
+    Component, DependencyError, ComponentMetadata,
 };
 use std::any::{Any, TypeId};
 use std::collections::{HashMap, HashSet};

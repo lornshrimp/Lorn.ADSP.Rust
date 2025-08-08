@@ -2,7 +2,7 @@
 
 use async_trait::async_trait;
 use config_abstractions::{ConfigWatcher, FileSystemConfigWatcher, FileFilter};
-use config_abstractions::events::{ConfigChangeEvent, FileSystemEvent, FileSystemEventType};
+use config_abstractions::events::ConfigChangeEvent;
 use infrastructure_common::ConfigError;
 use notify::{Watcher, RecursiveMode, recommended_watcher, Event, EventKind};
 use std::path::{Path, PathBuf};
