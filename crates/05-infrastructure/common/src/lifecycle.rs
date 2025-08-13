@@ -1,8 +1,7 @@
 //! 组件生命周期管理
 
-use std::sync::Arc;
-use async_trait::async_trait;
 use crate::errors::LifecycleError;
+use async_trait::async_trait;
 
 /// 组件生命周期类型
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -50,12 +49,12 @@ impl Scope {
             created_at: chrono::Utc::now(),
         }
     }
-    
+
     /// 创建根作用域
     pub fn root() -> Self {
         Self::new("root")
     }
-    
+
     /// 创建子作用域
     pub fn child(&self, name: impl Into<String>) -> Self {
         Self::new(format!("{}.{}", self.name, name.into()))
@@ -76,7 +75,7 @@ impl ScopeGuard {
             _cleanup: cleanup,
         }
     }
-    
+
     /// 获取作用域
     pub fn scope(&self) -> &Scope {
         &self.scope
@@ -94,13 +93,13 @@ impl Drop for ScopeGuard {
 pub trait LifecycleManager: Send + Sync {
     /// 确定组件的生命周期
     fn determine_lifetime(&self, type_info: &crate::metadata::TypeInfo) -> Lifetime;
-    
+
     /// 创建新作用域
     async fn create_scope(&self, name: impl Into<String> + Send) -> Result<Scope, LifecycleError>;
-    
+
     /// 管理作用域
     async fn manage_scope(&self, scope: Scope) -> Result<ScopeGuard, LifecycleError>;
-    
+
     /// 销毁作用域
     async fn destroy_scope(&self, scope_id: uuid::Uuid) -> Result<(), LifecycleError>;
 }
@@ -131,7 +130,7 @@ impl LifecycleManager for DefaultLifecycleManager {
     fn determine_lifetime(&self, type_info: &crate::metadata::TypeInfo) -> Lifetime {
         // 基于命名约定确定生命周期
         let type_name = &type_info.name;
-        
+
         if type_name.ends_with("Service") || type_name.ends_with("Manager") {
             Lifetime::Singleton
         } else if type_name.ends_with("Provider") {
@@ -140,26 +139,86 @@ impl LifecycleManager for DefaultLifecycleManager {
             Lifetime::Transient
         }
     }
-    
+
     async fn create_scope(&self, name: impl Into<String> + Send) -> Result<Scope, LifecycleError> {
         let scope = Scope::new(name);
         self.active_scopes.insert(scope.id, scope.clone());
         Ok(scope)
     }
-    
+
     async fn manage_scope(&self, scope: Scope) -> Result<ScopeGuard, LifecycleError> {
         let scope_id = scope.id;
         let active_scopes = self.active_scopes.clone();
-        
+
         let cleanup = Box::new(move || {
             active_scopes.remove(&scope_id);
         });
-        
+
         Ok(ScopeGuard::new(scope, cleanup))
     }
-    
+
     async fn destroy_scope(&self, scope_id: uuid::Uuid) -> Result<(), LifecycleError> {
         self.active_scopes.remove(&scope_id);
         Ok(())
+    }
+}
+
+/// 组件生命周期状态
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LifecycleState {
+    /// 未初始化
+    Uninitialized,
+    /// 初始化中
+    Initializing,
+    /// 运行中
+    Running,
+    /// 停止中
+    Stopping,
+    /// 已停止
+    Stopped,
+    /// 错误状态
+    Error,
+}
+
+impl Default for LifecycleState {
+    fn default() -> Self {
+        Self::Uninitialized
+    }
+}
+
+/// 组件生命周期管理 trait
+#[async_trait]
+pub trait Lifecycle: Send + Sync {
+    /// 组件启动
+    async fn on_start(&mut self) -> Result<(), Box<dyn std::error::Error + Send + Sync>>;
+
+    /// 组件停止
+    async fn on_stop(&mut self) -> Result<(), Box<dyn std::error::Error + Send + Sync>>;
+
+    /// 获取生命周期状态
+    fn get_lifecycle_state(&self) -> LifecycleState;
+
+    /// 是否可以启动
+    fn can_start(&self) -> bool {
+        matches!(
+            self.get_lifecycle_state(),
+            LifecycleState::Uninitialized | LifecycleState::Stopped
+        )
+    }
+
+    /// 是否可以停止
+    fn can_stop(&self) -> bool {
+        matches!(self.get_lifecycle_state(), LifecycleState::Running)
+    }
+}
+
+/// 依赖感知 trait
+pub trait DependencyAware {
+    /// 获取依赖列表
+    fn get_dependencies(&self) -> Vec<String>;
+
+    /// 是否可以在没有依赖的情况下启动
+    fn can_start_without_dependencies(&self) -> bool {
+        true
     }
 }
