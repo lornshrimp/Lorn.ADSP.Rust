@@ -22,6 +22,7 @@
 //!
 //! #[component(singleton)]
 //! #[configurable(path = "services.my_service")]
+//! #[derive(Debug)]
 //! pub struct MyService {
 //!     config: Option<MyServiceConfig>,
 //! }
@@ -52,10 +53,11 @@ mod utils;
 /// # 示例
 ///
 /// ```rust
+/// use component_macros::component;
+/// use infrastructure_common::Component;
 /// #[component(singleton, priority = 100)]
-/// pub struct MyService {
-///     // 字段
-/// }
+/// #[derive(Debug)]
+/// pub struct MyService;
 /// ```
 #[proc_macro_attribute]
 pub fn component(args: TokenStream, input: TokenStream) -> TokenStream {
@@ -75,10 +77,14 @@ pub fn component(args: TokenStream, input: TokenStream) -> TokenStream {
 /// # 示例
 ///
 /// ```rust
+/// use component_macros::configurable;
+/// use infrastructure_common::Configurable;
+/// use serde::{Deserialize, Serialize};
+/// #[derive(Debug, Clone, Deserialize, Serialize)]
+/// pub struct MyServiceConfig { pub enabled: bool }
 /// #[configurable(path = "services.my_service", optional)]
-/// pub struct MyService {
-///     // 字段
-/// }
+/// #[derive(Debug)]
+/// pub struct MyService { config: Option<MyServiceConfig> };
 /// ```
 #[proc_macro_attribute]
 pub fn configurable(args: TokenStream, input: TokenStream) -> TokenStream {
@@ -92,13 +98,17 @@ pub fn configurable(args: TokenStream, input: TokenStream) -> TokenStream {
 /// # 示例
 ///
 /// ```rust
+/// use component_macros::lifecycle;
 /// #[lifecycle(
 ///     on_start = "initialize",
 ///     on_stop = "cleanup",
 ///     depends_on = ["DatabaseService", "CacheService"]
 /// )]
-/// pub struct MyService {
-///     // 字段
+/// #[derive(Debug)]
+/// pub struct MyService;
+/// impl MyService {
+///     pub fn initialize(&mut self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> { Ok(()) }
+///     pub fn cleanup(&mut self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> { Ok(()) }
 /// }
 /// ```
 #[proc_macro_attribute]
@@ -113,10 +123,9 @@ pub fn lifecycle(args: TokenStream, input: TokenStream) -> TokenStream {
 /// # 示例
 ///
 /// ```rust
-/// #[derive(Component)]
-/// pub struct MyService {
-///     // 字段
-/// }
+/// use component_macros::Component;
+/// #[derive(Debug, Component)]
+/// pub struct MyService;
 /// ```
 #[proc_macro_derive(Component, attributes(component))]
 pub fn derive_component(input: TokenStream) -> TokenStream {
@@ -131,11 +140,13 @@ pub fn derive_component(input: TokenStream) -> TokenStream {
 /// # 示例
 ///
 /// ```rust
-/// #[derive(Configurable)]
+/// use component_macros::{Configurable, configurable};
+/// use serde::{Deserialize, Serialize};
+/// #[derive(Debug, Clone, Deserialize, Serialize)]
+/// pub struct MyServiceConfig { pub timeout: u64 }
+/// #[derive(Debug, Configurable)]
 /// #[configurable(path = "services.my_service")]
-/// pub struct MyService {
-///     config: MyServiceConfig,
-/// }
+/// pub struct MyService { config: MyServiceConfig };
 /// ```
 #[proc_macro_derive(Configurable, attributes(configurable))]
 pub fn derive_configurable(input: TokenStream) -> TokenStream {

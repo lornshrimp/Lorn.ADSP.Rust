@@ -1,0 +1,19 @@
+[package]
+name = "di-impl-integration-tests"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+publish = false
+
+[dev-dependencies]
+# 被测 crate 依赖
+infrastructure-common = { path = "../../crates/05-infrastructure/common" }
+di-abstractions = { path = "../../crates/05-infrastructure/di-abstractions" }
+di-impl = { path = "../../crates/05-infrastructure/di-impl" }
+
+# 测试依赖
+async-trait.workspace = true
+tokio.workspace = true
+anyhow.workspace = true

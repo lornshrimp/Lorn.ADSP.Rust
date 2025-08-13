@@ -1,0 +1,19 @@
+[package]
+name = "component-macros-integration-tests"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+component-macros = { path = "../../crates/09-tools/component-macros" }
+infrastructure-common = { path = "../../crates/05-infrastructure/common" }
+serde.workspace = true
+tokio.workspace = true
+async-trait.workspace = true
+ctor.workspace = true
+
+[dev-dependencies]
+trybuild = "1.0"

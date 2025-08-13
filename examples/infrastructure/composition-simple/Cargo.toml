@@ -1,0 +1,19 @@
+[package]
+name = "composition-simple-example"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+publish = false
+description = "Simple component discovery example (workspace-level)"
+
+[dependencies]
+infrastructure-composition = { path = "../../../crates/05-infrastructure/composition" }
+infrastructure-common = { path = "../../../crates/05-infrastructure/common" }
+async-trait.workspace = true
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true

@@ -1,0 +1,21 @@
+[package]
+name = "composition-advanced-example"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+publish = false
+description = "Advanced component discovery example (workspace-level)"
+
+[dependencies]
+infrastructure-composition = { path = "../../../crates/05-infrastructure/composition" }
+infrastructure-common = { path = "../../../crates/05-infrastructure/common" }
+component-macros = { path = "../../../crates/09-tools/component-macros" }
+async-trait.workspace = true
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+ctor.workspace = true

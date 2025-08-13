@@ -1,0 +1,5 @@
+error: expected identifier, found `;`
+ --> tests/trybuild/component_fail.rs:5:8
+  |
+5 | struct ;
+  |        ^ expected identifier

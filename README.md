@@ -179,55 +179,6 @@ Build an intelligent, one-stop digital advertising platform that helps advertise
 - **性能测试**: Criterion性能基准测试
 - **代码质量**: Clippy静态代码分析和Rustfmt代码格式化
 
-## Technology Stack
-
-This project is built on the Rust technology stack, utilizing the modern Rust ecosystem and supporting multi-cloud platform deployment. The technical architecture includes:
-
-### Core Development Framework
-- **Rust 1.75+**: Primary development language providing memory safety and high-performance runtime
-- **Tokio**: Asynchronous runtime supporting high-concurrency web services and network programming
-- **Axum**: Modern web framework for building high-performance API services
-- **SeaORM**: Async ORM framework supporting multiple databases and type-safe queries
-- **Tauri**: Cross-platform desktop application development for monitoring and management tools
-
-### Client SDK Technology Stack
-- **Tauri**: Cross-platform desktop development supporting Windows, macOS, Linux
-- **Yew**: WebAssembly frontend framework for building high-performance web applications
-- **TypeScript**: Mini-program SDK development supporting WeChat, Alipay, QuickApp platforms
-
-### Multi-Cloud Data Storage Architecture
-- **Relational Databases**: 
-  - Alibaba Cloud: RDS MySQL/PostgreSQL, PolarDB
-  - Azure: Azure SQL Database, Azure Database for MySQL/PostgreSQL
-  - AWS: RDS MySQL/PostgreSQL, Aurora
-- **Distributed Cache**: Redis 7.0 clusters supporting Alibaba Cloud Redis, Azure Cache, AWS ElastiCache
-- **Search Engine**: Elasticsearch 8.0 supporting full-text search and log analysis
-- **Message Queues**: Apache Kafka, RabbitMQ with multi-cloud managed service support
-
-### Microservices & Containerization
-- **Microservice Architecture**: Domain-driven design (DDD) based microservice decomposition
-- **API Gateway**: Custom Axum-based gateway supporting routing, rate limiting, circuit breaking
-- **Service Governance**: Consul service discovery and configuration center
-- **Containerized Deployment**: Docker containerization with Kubernetes orchestration
-
-### Ad Engine Core Technologies
-- **Pipeline Pattern**: Configurable ad processing workflows supporting dynamic strategy composition
-- **Rust Strategy Engine**: High-performance implementation of recall, filtering, and ranking strategies
-- **OpenRTB Protocol**: Real-time bidding implementation strictly following IAB standards
-- **VAST/VMAP**: Video Ad Serving Template standard support
-
-### Monitoring & Operations
-- **Metrics Monitoring**: Prometheus + Grafana monitoring system
-- **Distributed Tracing**: Jaeger distributed tracing system
-- **Log Analysis**: ELK Stack (Elasticsearch + Logstash + Kibana)
-- **Performance Testing**: Custom Tokio-based load testing framework
-
-### Testing & Quality Assurance
-- **Unit Testing**: Rust built-in testing framework with Mockall mocking library
-- **Integration Testing**: Testcontainers-rs containerized testing
-- **Performance Testing**: Criterion performance benchmarking
-- **Code Quality**: Clippy static code analysis and Rustfmt code formatting
-
 ## 项目文档
 
 本项目提供完整的文档体系，分为三个主要目录：
@@ -271,6 +222,66 @@ This project provides a comprehensive documentation system organized into three 
 - Product requirements list
 - Risk management plan
 - Sprint planning templates
+
+## 示例与测试集中化结构 / Centralized Examples & Tests
+
+为保持生产代码纯净，所有示例 (examples) 与跨 crate 集成测试 (integration tests) 已集中管理：
+
+### 结构 Structure
+
+```text
+examples/
+  demo-package/                # 演示包 (独立可运行)
+  infrastructure/
+    composition-simple/        # 组件发现简单示例
+    composition-advanced/      # 组件发现进阶示例
+
+tests/
+  di-impl-integration/         # 依赖注入实现集成测试
+  component-macros-integration/# 组件宏集成与属性宏行为测试
+```
+
+### 运行示例 Run Examples
+
+```bash
+cargo run -p composition-simple
+cargo run -p composition-advanced
+```
+
+### 运行集中化集成测试 Run Centralized Integration Tests
+
+```bash
+cargo test -p di-impl-integration-tests
+cargo test -p component-macros-integration-tests
+```
+
+### 设计原则 Principles
+
+- 不在生产 crate 下放置 examples/ 与 tests/ 目录（除非仅限单元测试）
+- 集成测试以独立测试 crate 形式存在，避免测试依赖污染生产依赖图
+- 示例工程显式声明对内部 crate 的 path 依赖，保证可复制与最小侧效应
+- 迁移后在原位置保留最小占位（或已删除），防止旧路径继续被使用
+
+### 新增示例 / New Example
+
+1. 在 `examples/<domain>/<name>/` 新建 crate（推荐分层结构）
+2. Cargo.toml 使用 `version.workspace = true` 并添加所需内部依赖 path
+3. 更新根 `Cargo.toml` 的 workspace members（如使用自动发现可省略）
+
+### 新增集成测试 / New Integration Test
+
+1. 在 `tests/<subject>-integration/` 新建测试 crate
+2. 只通过 `[dev-dependencies]` 引用被测 crate
+3. 需要宏扩展或过程宏测试时，确保把宏 crate 放入 `[dependencies]`
+4. 使用 trybuild / 运行时断言结合（可参考后续将添加的宏失败用例）
+
+### 迁移收益 Benefits
+
+- 减少生产 crate 编译时间与测试噪音
+- 明确区分单元测试与跨边界集成测试
+- 提高示例代码可发现性与可维护性
+
+---
 
 ## 开源协议
 
@@ -319,23 +330,3 @@ As a senior advertising product architect, he has published books such as "Intel
 📧 Contact: [lornshrimp.pm@outlook.com](mailto:lornshrimp.pm@outlook.com)  
 💻 Visit the author's GitHub for more open-source projects  
 ![WeChat Official Account QR Code](Author/微信公众号二维码.png){width=200px}
-- **Video Production**: Automatically edit and generate short video ads supporting various styles and scenarios
-- **Material Optimization**: Continuously optimize creative material performance based on delivery effectiveness feedback
-
-### 2. User Insight Analysis
-- **Behavior Prediction**: Predict future behavioral trends and purchase probability based on user historical behavior
-- **Interest Mining**: Deep analysis of user content consumption habits to discover potential interest points
-- **Sentiment Analysis**: Understand user emotional reactions to ad content to optimize delivery strategies
-- **Value Assessment**: Intelligently assess user commercial value and conversion potential
-
-### 3. Delivery Intelligent Optimization
-- **Strategy Recommendations**: Intelligently recommend optimal delivery strategies based on historical delivery data
-- **Real-time Optimization**: Monitor delivery effectiveness and adjust delivery parameters and strategies in real-time
-- **Anomaly Detection**: Identify anomalies in the delivery process with timely alerts and handling
-- **Performance Prediction**: Predict expected effectiveness and ROI of different delivery strategies
-
-### 4. Content Understanding and Review
-- **Multimodal Understanding**: Simultaneously understand multiple content forms including text, images, and videos
-- **Compliance Detection**: Automatically detect whether ad content complies with regulations and platform standards
-- **Quality Assessment**: Evaluate the quality and attractiveness of advertising creatives
-- **Risk Identification**: Identify potential brand risks and negative impacts

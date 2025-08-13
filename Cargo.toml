@@ -79,6 +79,12 @@ members = [
     
     # 演示包
     "examples/demo-package",
+    # 迁移后的集中示例
+    "examples/infrastructure/composition-simple",
+    "examples/infrastructure/composition-advanced",
+    # 迁移后的集中测试工程
+    "tests/di-impl-integration",
+    "tests/component-macros-integration",
 ]
 
 [workspace.package]

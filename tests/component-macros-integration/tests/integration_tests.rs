@@ -1,10 +1,9 @@
-//! 组件宏集成测试
+//! Centralized integration tests for component-macros crate (migrated)
 
 use component_macros::{component, configurable, lifecycle};
-use infrastructure_common::{Component, Configurable, DependencyAware, Lifecycle};
+use infrastructure_common::{Component, Configurable, Lifecycle}; // removed DependencyAware
 use serde::{Deserialize, Serialize};
 
-/// 测试服务配置
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct TestServiceConfig {
     pub enabled: bool,
@@ -22,7 +21,6 @@ impl Default for TestServiceConfig {
     }
 }
 
-/// 测试服务
 #[derive(Debug)]
 #[component(singleton, priority = 100)]
 #[configurable(path = "services.test_service")]
@@ -43,47 +41,37 @@ impl TestService {
             initialized: false,
         }
     }
-
     pub fn initialize(&mut self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         self.initialized = true;
-        println!("TestService initialized");
         Ok(())
     }
-
     pub fn cleanup(&mut self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         self.initialized = false;
-        println!("TestService cleaned up");
         Ok(())
     }
-
     pub fn is_initialized(&self) -> bool {
         self.initialized
     }
 }
 
-/// 简单组件测试
 #[derive(Debug)]
 #[component(transient)]
 pub struct SimpleComponent {
     name: String,
 }
-
 impl SimpleComponent {
     pub fn new(name: String) -> Self {
         Self { name }
     }
-
     pub fn get_name(&self) -> &str {
         &self.name
     }
 }
 
-/// 可配置组件测试
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct SimpleConfig {
     pub value: i32,
 }
-
 impl Default for SimpleConfig {
     fn default() -> Self {
         Self { value: 42 }
@@ -95,21 +83,61 @@ impl Default for SimpleConfig {
 pub struct ConfigurableComponent {
     config: Option<SimpleConfig>,
 }
-
 impl ConfigurableComponent {
     pub fn new() -> Self {
         Self { config: None }
     }
-
     pub fn get_config_value(&self) -> Option<i32> {
         self.config.as_ref().map(|c| c.value)
     }
 }
 
-// This crate-level integration tests have been moved to workspace-level tests/component-macros-integration.
-// Keeping this file minimal to avoid duplication.
+#[test]
+fn test_component_trait_implementation() {
+    let service = TestService::new();
+    assert_eq!(service.name(), "TestService");
+    assert_eq!(service.priority(), 100);
+    assert!(service.is_enabled());
+}
 
 #[test]
-fn moved_to_workspace_level() {
-    eprintln!("Tests moved to tests/component-macros-integration.");
+fn test_configurable_trait_implementation() {
+    let mut service = TestService::new();
+    assert_eq!(TestService::get_config_path(), "services.test_service");
+    let config = TestServiceConfig {
+        enabled: true,
+        timeout: 60,
+        max_connections: 200,
+    };
+    assert!(service.configure(config).is_ok());
+}
+
+#[tokio::test]
+async fn test_lifecycle_trait_implementation() {
+    let mut service = TestService::new();
+    assert!(!service.is_initialized());
+    assert!(service.on_start().await.is_ok());
+    assert!(service.is_initialized());
+    assert!(service.on_stop().await.is_ok());
+    assert!(!service.is_initialized());
+}
+
+#[test]
+fn test_configurable_component() {
+    let mut component = ConfigurableComponent::new();
+    assert_eq!(
+        ConfigurableComponent::get_config_path(),
+        "components.simple"
+    );
+    assert_eq!(component.get_config_value(), None);
+    let config = SimpleConfig { value: 123 };
+    assert!(component.configure(config).is_ok());
+}
+
+#[test]
+fn test_default_config() {
+    let default_config = TestServiceConfig::default();
+    assert!(default_config.enabled);
+    assert_eq!(default_config.timeout, 30);
+    assert_eq!(default_config.max_connections, 100);
 }

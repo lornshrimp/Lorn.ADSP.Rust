@@ -1,0 +1,5 @@
+error: expected `struct`
+ --> tests/trybuild/fail_missing_lifecycle.rs:5:1
+  |
+5 | fn dummy() {}
+  | ^^
