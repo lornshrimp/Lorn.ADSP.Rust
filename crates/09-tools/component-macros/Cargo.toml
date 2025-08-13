@@ -13,6 +13,7 @@ quote.workspace = true
 syn.workspace = true
 infrastructure-common = { path = "../../05-infrastructure/common" }
 ctor.workspace = true
+async-trait.workspace = true
 
 [dependencies.serde]
 workspace = true

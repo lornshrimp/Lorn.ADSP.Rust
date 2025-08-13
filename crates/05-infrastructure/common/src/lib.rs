@@ -34,3 +34,27 @@ pub use errors::*;
 pub use health::*;
 pub use lifecycle::*;
 pub use metadata::*;
+
+/// 全局组件注册表
+static GLOBAL_COMPONENT_REGISTRY: once_cell::sync::Lazy<
+    parking_lot::RwLock<Option<std::sync::Arc<dyn GlobalComponentRegistry>>>
+> = once_cell::sync::Lazy::new(|| parking_lot::RwLock::new(None));
+
+/// 全局组件注册表 trait
+pub trait GlobalComponentRegistry: Send + Sync {
+    /// 注册组件描述符
+    fn register_component_descriptor(&self, descriptor: ComponentDescriptor) -> Result<(), crate::errors::InfrastructureError>;
+    
+    /// 获取所有注册的组件描述符
+    fn get_all_descriptors(&self) -> Vec<ComponentDescriptor>;
+}
+
+/// 获取全局组件注册表
+pub fn get_global_component_registry() -> Option<std::sync::Arc<dyn GlobalComponentRegistry>> {
+    GLOBAL_COMPONENT_REGISTRY.read().clone()
+}
+
+/// 设置全局组件注册表
+pub fn set_global_component_registry(registry: std::sync::Arc<dyn GlobalComponentRegistry>) {
+    *GLOBAL_COMPONENT_REGISTRY.write() = Some(registry);
+}
