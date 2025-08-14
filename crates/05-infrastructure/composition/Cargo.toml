@@ -30,6 +30,9 @@ dashmap.workspace = true
 parking_lot.workspace = true
 once_cell.workspace = true
 
+[dev-dependencies]
+tempfile = "3.8"
+
 [lib]
 name = "infrastructure_composition"
 path = "src/lib.rs"

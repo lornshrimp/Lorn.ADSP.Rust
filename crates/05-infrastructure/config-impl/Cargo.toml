@@ -30,6 +30,9 @@ glob = "0.3"
 dashmap.workspace = true
 parking_lot.workspace = true
 
+[dev-dependencies]
+tempfile = "3.8"
+
 [lib]
 name = "config_impl"
 path = "src/lib.rs"

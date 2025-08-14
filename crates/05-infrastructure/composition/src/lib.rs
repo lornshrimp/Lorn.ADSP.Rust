@@ -48,6 +48,11 @@ pub use component_scanner::{
     AdvancedComponentManager, ComponentDiscoveryStrategy, ComponentLifecycle,
     ComponentRegistration, ComponentScannerBuilder, ComponentScannerImpl,
 };
+
+#[cfg(test)]
+mod tests {
+    pub mod integration_tests;
+}
 // pub use enhanced_component_scanner::{
 //     ComponentFilter, ComponentInterceptor, LoggingInterceptor, 
 //     ScopeFilter, NameFilter, ComponentScannerImpl as EnhancedComponentScannerImpl,

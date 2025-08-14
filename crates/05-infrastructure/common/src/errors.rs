@@ -36,6 +36,21 @@ pub enum ConfigError {
 
     #[error("配置重载失败: {message}")]
     ReloadError { message: String },
+
+    #[error("配置验证失败: {errors:?}")]
+    ValidationFailed { errors: Vec<String> },
+
+    #[error("没有可回滚的配置")]
+    NoRollbackAvailable,
+
+    #[error("配置版本不存在: {version}")]
+    VersionNotFound { version: u64 },
+
+    #[error("配置文件监控失败: {message}")]
+    WatchError { message: String },
+
+    #[error("配置热重载失败: {message}")]
+    HotReloadError { message: String },
 }
 
 /// 依赖注入错误类型
@@ -159,6 +174,27 @@ impl ValidationError {
             field_name: field_name.into(),
             value: value.into(),
             reason: reason.into(),
+        }
+    }
+
+    /// 创建值超出范围错误
+    pub fn value_out_of_range(
+        field_name: impl Into<String>,
+        value: impl Into<String>,
+        range: impl Into<String>,
+    ) -> Self {
+        Self::ValueOutOfRange {
+            field_name: field_name.into(),
+            value: value.into(),
+            range: range.into(),
+        }
+    }
+
+    /// 创建格式错误
+    pub fn format_error(field_name: impl Into<String>, expected_format: impl Into<String>) -> Self {
+        Self::FormatError {
+            field_name: field_name.into(),
+            expected_format: expected_format.into(),
         }
     }
 }

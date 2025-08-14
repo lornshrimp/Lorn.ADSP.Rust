@@ -1,7 +1,7 @@
 //! 基础设施构建器
 
 use crate::infrastructure::AdSystemInfrastructure;
-use config_abstractions::ConfigProvider;
+use config_abstractions::{ConfigManager, ConfigProvider};
 use config_impl::providers::{
     EnvironmentConfigProviderImpl, JsonConfigProvider, TomlConfigProvider,
 };
@@ -27,6 +27,8 @@ pub struct InfrastructureBuilder {
     env_prefix: Option<String>,
     /// 配置验证是否启用
     validation_enabled: bool,
+    /// 是否启用日志初始化
+    logging_enabled: bool,
     /// 日志配置
     logging_config: LoggingConfig,
 }
@@ -41,6 +43,7 @@ impl InfrastructureBuilder {
             hot_reload_enabled: false,
             env_prefix: None,
             validation_enabled: true,
+            logging_enabled: false, // 默认不启用日志初始化
             logging_config: LoggingConfig::default(),
         }
     }
@@ -210,6 +213,7 @@ impl InfrastructureBuilder {
     /// 配置日志
     pub fn with_logging(mut self, config: LoggingConfig) -> Self {
         self.logging_config = config;
+        self.logging_enabled = true; // 启用日志初始化
         self
     }
 
@@ -217,11 +221,73 @@ impl InfrastructureBuilder {
     pub async fn build(self) -> Result<AdSystemInfrastructure, InfrastructureError> {
         info!("开始构建基础设施");
 
-        // 初始化日志
-        self.initialize_logging()?;
+        // 只有在明确配置了日志时才初始化日志
+        // 避免在测试环境中重复初始化
+        if self.logging_enabled {
+            self.initialize_logging()?;
+        }
 
         // 创建配置管理器
-        let config_manager = Arc::new(config_impl::manager::AdSystemConfigManager::new());
+        let mut config_manager = config_impl::manager::AdSystemConfigManager::new();
+
+        // 注册所有配置提供者
+        for provider in self.config_sources {
+            config_manager
+                .register_provider(provider)
+                .await
+                .map_err(|e| InfrastructureError::BootstrapFailed {
+                    message: format!("注册配置提供者失败: {}", e),
+                })?;
+        }
+
+        // 如果启用热重载，配置热重载功能
+        if self.hot_reload_enabled {
+            info!("启用配置热重载");
+
+            // 创建文件监控器
+            let file_watcher = config_impl::watcher::ConfigFileWatcher::new().map_err(|e| {
+                InfrastructureError::BootstrapFailed {
+                    message: format!("创建文件监控器失败: {}", e),
+                }
+            })?;
+            let watcher = Arc::new(tokio::sync::Mutex::new(file_watcher));
+
+            config_manager
+                .enable_hot_reload(watcher)
+                .await
+                .map_err(|e| InfrastructureError::BootstrapFailed {
+                    message: format!("启用热重载失败: {}", e),
+                })?;
+        }
+
+        // 如果启用验证，进行配置验证
+        if self.validation_enabled {
+            info!("开始配置验证");
+            let validation_result = config_manager.validate_configuration().await.map_err(|e| {
+                InfrastructureError::BootstrapFailed {
+                    message: format!("配置验证失败: {}", e),
+                }
+            })?;
+
+            if !validation_result.is_valid {
+                let error_messages: Vec<String> = validation_result
+                    .errors
+                    .iter()
+                    .map(|e| format!("{}: {}", e.path, e.message))
+                    .collect();
+                return Err(InfrastructureError::BootstrapFailed {
+                    message: format!("配置验证失败: {}", error_messages.join(", ")),
+                });
+            }
+
+            if !validation_result.warnings.is_empty() {
+                for warning in validation_result.warnings {
+                    tracing::warn!("配置警告 [{}]: {}", warning.path, warning.message);
+                }
+            }
+        }
+
+        let config_manager = Arc::new(config_manager);
 
         // 创建依赖注入容器
         let di_container = di_impl::DiContainerImpl::new();

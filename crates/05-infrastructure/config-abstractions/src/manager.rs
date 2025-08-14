@@ -1,54 +1,60 @@
 //! 配置管理器抽象接口
 
+use crate::provider::ConfigProvider;
+use crate::validator::ConfigValidator;
 use async_trait::async_trait;
 use infrastructure_common::{ConfigError, ConfigSection, Configurable};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use crate::provider::ConfigProvider;
-use crate::validator::ConfigValidator;
 use std::any::TypeId;
 
 /// 配置管理器 trait
-/// 
+///
 /// 提供配置的统一管理接口，支持多个配置源
 #[async_trait]
 pub trait ConfigManager: Send + Sync {
     /// 注册配置提供者
-    async fn register_provider(&mut self, provider: Box<dyn ConfigProvider>) -> Result<(), ConfigError>;
-    
+    async fn register_provider(
+        &mut self,
+        provider: Box<dyn ConfigProvider>,
+    ) -> Result<(), ConfigError>;
+
     /// 移除配置提供者
     async fn unregister_provider(&mut self, provider_name: &str) -> Result<(), ConfigError>;
-    
+
     /// 获取配置值
     async fn get_configuration(&self, key: &str) -> Result<Value, ConfigError>;
-    
+
     /// 获取配置节
     async fn get_section(&self, section_name: &str) -> Result<ConfigSection, ConfigError>;
-    
+
     /// 绑定配置到指定类型
     async fn bind_configuration<T>(&self, key: &str) -> Result<T, ConfigError>
     where
         T: for<'de> Deserialize<'de> + Send + 'static;
-    
+
     /// 绑定配置到实例
     async fn bind_to_instance<T>(&self, instance: &mut T, path: &str) -> Result<(), ConfigError>
     where
         T: Configurable;
-    
+
     /// 重新加载所有配置
     async fn reload_all(&mut self) -> Result<(), ConfigError>;
-    
+
     /// 验证配置
     async fn validate_configuration(&self) -> Result<ValidationResult, ConfigError>;
-    
+
     /// 注册配置验证器
-    async fn register_validator<T>(&mut self, validator: Box<dyn ConfigValidator<T>>) -> Result<(), ConfigError>
+    async fn register_validator<T>(
+        &mut self,
+        validator: Box<dyn ConfigValidator<T>>,
+    ) -> Result<(), ConfigError>
     where
         T: 'static;
-    
+
     /// 注册所有组件的配置选项
     async fn register_all_options(&mut self) -> Result<(), ConfigError>;
-    
+
     /// 注册特定组件的配置选项
     async fn register_component_options<T>(&mut self) -> Result<(), ConfigError>
     where
@@ -56,7 +62,7 @@ pub trait ConfigManager: Send + Sync {
 }
 
 /// 类型化配置绑定器 trait
-/// 
+///
 /// 提供强类型的配置绑定功能
 #[async_trait]
 pub trait TypedConfigBinder: Send + Sync {
@@ -64,17 +70,17 @@ pub trait TypedConfigBinder: Send + Sync {
     async fn bind_configuration<T>(&self, path: &str) -> Result<T, ConfigError>
     where
         T: for<'de> Deserialize<'de> + Send + 'static;
-    
+
     /// 绑定配置到实例
     async fn bind_to_instance<T>(&self, instance: &mut T, path: &str) -> Result<(), ConfigError>
     where
         T: Configurable;
-    
+
     /// 绑定配置并验证
     async fn bind_and_validate<T>(&self, path: &str) -> Result<T, ConfigError>
     where
         T: for<'de> Deserialize<'de> + Send + 'static;
-        
+
     /// 获取配置类型信息
     fn get_config_type_info<T>(&self) -> ConfigTypeInfo
     where
@@ -104,7 +110,7 @@ impl ValidationResult {
             validated_at: chrono::Utc::now(),
         }
     }
-    
+
     /// 创建失败的验证结果
     pub fn failure(errors: Vec<ValidationError>) -> Self {
         Self {
@@ -114,13 +120,13 @@ impl ValidationResult {
             validated_at: chrono::Utc::now(),
         }
     }
-    
+
     /// 添加错误
     pub fn add_error(&mut self, error: ValidationError) {
         self.errors.push(error);
         self.is_valid = false;
     }
-    
+
     /// 添加警告
     pub fn add_warning(&mut self, warning: ValidationWarning) {
         self.warnings.push(warning);
@@ -142,6 +148,74 @@ pub struct ValidationError {
     pub actual: Option<String>,
 }
 
+impl ValidationError {
+    /// 创建新的验证错误
+    pub fn new(
+        path: impl Into<String>,
+        message: impl Into<String>,
+        error_type: ValidationErrorType,
+    ) -> Self {
+        Self {
+            path: path.into(),
+            message: message.into(),
+            error_type,
+            expected: None,
+            actual: None,
+        }
+    }
+
+    /// 创建必需字段缺失错误
+    pub fn required_field_missing(path: impl Into<String>) -> Self {
+        Self::new(
+            path,
+            "必需字段缺失",
+            ValidationErrorType::RequiredFieldMissing,
+        )
+    }
+
+    /// 创建字段值无效错误
+    pub fn invalid_field_value(
+        path: impl Into<String>,
+        actual: impl Into<String>,
+        message: impl Into<String>,
+    ) -> Self {
+        Self {
+            path: path.into(),
+            message: message.into(),
+            error_type: ValidationErrorType::Custom,
+            expected: None,
+            actual: Some(actual.into()),
+        }
+    }
+
+    /// 创建值超出范围错误
+    pub fn value_out_of_range(
+        path: impl Into<String>,
+        actual: impl Into<String>,
+        expected: impl Into<String>,
+    ) -> Self {
+        Self {
+            path: path.into(),
+            message: "值超出范围".into(),
+            error_type: ValidationErrorType::ValueOutOfRange,
+            expected: Some(expected.into()),
+            actual: Some(actual.into()),
+        }
+    }
+
+    /// 创建格式错误
+    pub fn format_error(path: impl Into<String>, pattern: impl Into<String>) -> Self {
+        let pattern_str = pattern.into();
+        Self {
+            path: path.into(),
+            message: format!("格式不匹配，期望模式: {}", pattern_str),
+            error_type: ValidationErrorType::FormatError,
+            expected: Some(pattern_str),
+            actual: None,
+        }
+    }
+}
+
 /// 验证警告
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ValidationWarning {
@@ -151,6 +225,21 @@ pub struct ValidationWarning {
     pub message: String,
     /// 建议
     pub suggestion: Option<String>,
+}
+
+impl ValidationWarning {
+    /// 创建新的验证警告
+    pub fn new(
+        path: impl Into<String>,
+        message: impl Into<String>,
+        suggestion: Option<String>,
+    ) -> Self {
+        Self {
+            path: path.into(),
+            message: message.into(),
+            suggestion,
+        }
+    }
 }
 
 /// 验证错误类型
