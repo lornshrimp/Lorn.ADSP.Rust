@@ -53,16 +53,16 @@ pub use component_scanner::{
 mod tests {
     pub mod integration_tests;
 }
-// pub use enhanced_component_scanner::{
-//     ComponentFilter, ComponentInterceptor, LoggingInterceptor, 
-//     ScopeFilter, NameFilter, ComponentScannerImpl as EnhancedComponentScannerImpl,
-//     AdvancedComponentManager as EnhancedAdvancedComponentManager, 
-//     ComponentDiscoveryStrategy as EnhancedComponentDiscoveryStrategy, 
-//     AdvancedComponentMetadata,
-// };
 pub use config_sources::{
     ConfigSourceDescriptor, ConfigSourceManagerBuilder, ConfigSourceOptions, ConfigSourceType,
     ExtendedConfigSourceManager,
+};
+pub use enhanced_component_scanner::{
+    AdvancedComponentManager as EnhancedAdvancedComponentManager, AdvancedComponentMetadata,
+    AttributeExtractor, ComponentFilter, ComponentInfo, ComponentInterceptor, CompositeMode,
+    ConditionEvaluator, DiscoveryContext, EnhancedComponentDiscoveryStrategy,
+    EnhancedComponentScannerImpl, ImplementorInfo, LoggingInterceptor, NameFilter, ScopeFilter,
+    TraitDiscoverer,
 };
 pub use infrastructure::{AdSystemInfrastructure, InfrastructureMetrics, InfrastructureStatus};
 

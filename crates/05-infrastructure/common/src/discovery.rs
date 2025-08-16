@@ -1,13 +1,13 @@
 //! 组件反射和发现机制
-//! 
+//!
 //! 提供编译时和运行时的组件发现能力
 
 use crate::{Component, ComponentError, TypeInfo};
+use async_trait::async_trait;
 use std::any::{Any, TypeId};
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::sync::Arc;
-use async_trait::async_trait;
 
 /// 类型反射信息
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -35,7 +35,7 @@ impl ReflectionInfo {
             generic_params: Vec::new(),
         }
     }
-    
+
     /// 创建 trait object 反射信息
     pub fn of_trait<T: ?Sized + 'static>() -> Self {
         Self {
@@ -46,7 +46,7 @@ impl ReflectionInfo {
             generic_params: Vec::new(),
         }
     }
-    
+
     /// 添加泛型参数
     pub fn with_generic_param(mut self, param: TypeInfo) -> Self {
         self.generic_params.push(param);
@@ -89,32 +89,32 @@ impl DiscoveryMetadata {
             startup_order: 0,
         }
     }
-    
+
     /// 添加提供的服务
     pub fn provides<T: 'static>(mut self) -> Self {
         self.provides.push(TypeInfo::of::<T>());
         self
     }
-    
+
     /// 设置作用域
     pub fn with_scope(mut self, scope: ComponentScope) -> Self {
         self.scope = scope;
         self
     }
-    
+
     /// 设置单例
     pub fn singleton(mut self) -> Self {
         self.singleton = true;
         self.scope = ComponentScope::Singleton;
         self
     }
-    
+
     /// 添加标签
     pub fn with_tag(mut self, tag: impl Into<String>) -> Self {
         self.tags.insert(tag.into());
         self
     }
-    
+
     /// 设置启动顺序
     pub fn with_startup_order(mut self, order: i32) -> Self {
         self.startup_order = order;
@@ -143,15 +143,15 @@ pub trait Discoverable: Component {
     fn discovery_metadata() -> DiscoveryMetadata
     where
         Self: Sized;
-    
+
     /// 获取依赖列表
     fn get_dependencies(&self) -> Vec<TypeInfo>;
-    
+
     /// 获取提供的服务列表
     fn get_provides(&self) -> Vec<TypeInfo> {
         Vec::new()
     }
-    
+
     /// 检查是否可以提供指定类型的服务
     fn can_provide(&self, type_info: &TypeInfo) -> bool {
         self.get_provides().contains(type_info)
@@ -185,7 +185,7 @@ pub enum DependencyRelationship {
 }
 
 /// 依赖关系图
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DependencyGraph {
     /// 节点（组件）映射
     nodes: HashMap<TypeInfo, DiscoveryMetadata>,
@@ -207,23 +207,25 @@ impl DependencyGraph {
             reverse_adjacency_list: HashMap::new(),
         }
     }
-    
+
     /// 添加组件节点
     pub fn add_component(&mut self, metadata: DiscoveryMetadata) {
-        let type_info = TypeInfo::new(
-            metadata.reflection.type_id,
-            metadata.reflection.type_name,
-        );
-        
+        let type_info = TypeInfo::new(metadata.reflection.type_id, metadata.reflection.type_name);
+
         // 添加节点
         self.nodes.insert(type_info.clone(), metadata.clone());
-        
+
         // 建立依赖关系
         for dep in &metadata.dependencies {
-            self.add_dependency(type_info.clone(), dep.clone(), DependencyRelationship::Constructor, false);
+            self.add_dependency(
+                type_info.clone(),
+                dep.clone(),
+                DependencyRelationship::Constructor,
+                false,
+            );
         }
     }
-    
+
     /// 添加依赖关系
     pub fn add_dependency(
         &mut self,
@@ -238,41 +240,41 @@ impl DependencyGraph {
             relationship,
             optional,
         };
-        
+
         self.edges.push(dependency_info);
-        
+
         // 更新邻接表
         self.adjacency_list
             .entry(dependent.clone())
             .or_insert_with(Vec::new)
             .push(dependency.clone());
-            
+
         self.reverse_adjacency_list
             .entry(dependency)
             .or_insert_with(Vec::new)
             .push(dependent);
     }
-    
+
     /// 检测循环依赖
     pub fn detect_circular_dependencies(&self) -> Result<(), Vec<Vec<TypeInfo>>> {
         let mut visited = HashSet::new();
         let mut rec_stack = HashSet::new();
         let mut cycles = Vec::new();
-        
+
         for node in self.nodes.keys() {
             if !visited.contains(node) {
                 let mut path = Vec::new();
                 self.dfs_detect_cycle(node, &mut visited, &mut rec_stack, &mut path, &mut cycles);
             }
         }
-        
+
         if cycles.is_empty() {
             Ok(())
         } else {
             Err(cycles)
         }
     }
-    
+
     /// 深度优先搜索检测循环
     fn dfs_detect_cycle(
         &self,
@@ -285,7 +287,7 @@ impl DependencyGraph {
         visited.insert(node.clone());
         rec_stack.insert(node.clone());
         path.push(node.clone());
-        
+
         if let Some(dependencies) = self.adjacency_list.get(node) {
             for dep in dependencies {
                 if rec_stack.contains(dep) {
@@ -299,39 +301,39 @@ impl DependencyGraph {
                 }
             }
         }
-        
+
         path.pop();
         rec_stack.remove(node);
     }
-    
+
     /// 获取拓扑排序（启动顺序）
     pub fn topological_sort(&self) -> Result<Vec<TypeInfo>, ComponentError> {
         let mut in_degree = HashMap::new();
         let mut queue = std::collections::VecDeque::new();
         let mut result = Vec::new();
-        
+
         // 计算入度
         for node in self.nodes.keys() {
             in_degree.insert(node.clone(), 0);
         }
-        
+
         for edge in &self.edges {
             if !edge.optional {
                 *in_degree.entry(edge.dependent.clone()).or_insert(0) += 1;
             }
         }
-        
+
         // 找到入度为0的节点
         for (node, degree) in &in_degree {
             if *degree == 0 {
                 queue.push_back(node.clone());
             }
         }
-        
+
         // Kahn算法
         while let Some(node) = queue.pop_front() {
             result.push(node.clone());
-            
+
             if let Some(dependencies) = self.adjacency_list.get(&node) {
                 for dep in dependencies {
                     if let Some(degree) = in_degree.get_mut(dep) {
@@ -343,7 +345,7 @@ impl DependencyGraph {
                 }
             }
         }
-        
+
         if result.len() != self.nodes.len() {
             Err(ComponentError::CircularDependency {
                 cycle: "检测到循环依赖".to_string(),
@@ -352,7 +354,7 @@ impl DependencyGraph {
             Ok(result)
         }
     }
-    
+
     /// 获取组件的直接依赖
     pub fn get_dependencies(&self, component: &TypeInfo) -> Vec<&TypeInfo> {
         self.adjacency_list
@@ -360,7 +362,7 @@ impl DependencyGraph {
             .map(|deps| deps.iter().collect())
             .unwrap_or_default()
     }
-    
+
     /// 获取依赖于指定组件的组件列表
     pub fn get_dependents(&self, component: &TypeInfo) -> Vec<&TypeInfo> {
         self.reverse_adjacency_list
@@ -368,12 +370,12 @@ impl DependencyGraph {
             .map(|deps| deps.iter().collect())
             .unwrap_or_default()
     }
-    
+
     /// 获取所有组件元数据
     pub fn get_all_components(&self) -> Vec<&DiscoveryMetadata> {
         self.nodes.values().collect()
     }
-    
+
     /// 根据标签查找组件
     pub fn find_by_tag(&self, tag: &str) -> Vec<&DiscoveryMetadata> {
         self.nodes
@@ -381,7 +383,7 @@ impl DependencyGraph {
             .filter(|metadata| metadata.tags.contains(tag))
             .collect()
     }
-    
+
     /// 根据作用域查找组件
     pub fn find_by_scope(&self, scope: &ComponentScope) -> Vec<&DiscoveryMetadata> {
         self.nodes
@@ -402,13 +404,16 @@ impl Default for DependencyGraph {
 pub trait ComponentDiscovery: Send + Sync {
     /// 发现组件
     async fn discover_components(&self) -> Result<Vec<DiscoveryMetadata>, ComponentError>;
-    
+
     /// 按类型发现组件
-    async fn discover_by_type(&self, type_info: &TypeInfo) -> Result<Option<DiscoveryMetadata>, ComponentError>;
-    
+    async fn discover_by_type(
+        &self,
+        type_info: &TypeInfo,
+    ) -> Result<Option<DiscoveryMetadata>, ComponentError>;
+
     /// 按标签发现组件
     async fn discover_by_tag(&self, tag: &str) -> Result<Vec<DiscoveryMetadata>, ComponentError>;
-    
+
     /// 构建依赖关系图
     async fn build_dependency_graph(&self) -> Result<DependencyGraph, ComponentError>;
 }
@@ -431,11 +436,14 @@ impl ComponentDiscovery for ReflectionComponentDiscovery {
     async fn discover_components(&self) -> Result<Vec<DiscoveryMetadata>, ComponentError> {
         self.registry.get_all_discovery_metadata().await
     }
-    
-    async fn discover_by_type(&self, type_info: &TypeInfo) -> Result<Option<DiscoveryMetadata>, ComponentError> {
+
+    async fn discover_by_type(
+        &self,
+        type_info: &TypeInfo,
+    ) -> Result<Option<DiscoveryMetadata>, ComponentError> {
         self.registry.get_discovery_metadata(type_info).await
     }
-    
+
     async fn discover_by_tag(&self, tag: &str) -> Result<Vec<DiscoveryMetadata>, ComponentError> {
         let all_components = self.discover_components().await?;
         Ok(all_components
@@ -443,15 +451,15 @@ impl ComponentDiscovery for ReflectionComponentDiscovery {
             .filter(|metadata| metadata.tags.contains(tag))
             .collect())
     }
-    
+
     async fn build_dependency_graph(&self) -> Result<DependencyGraph, ComponentError> {
         let mut graph = DependencyGraph::new();
         let components = self.discover_components().await?;
-        
+
         for component in components {
             graph.add_component(component);
         }
-        
+
         Ok(graph)
     }
 }
@@ -460,26 +468,31 @@ impl ComponentDiscovery for ReflectionComponentDiscovery {
 #[async_trait]
 pub trait ComponentRegistry: Send + Sync {
     /// 注册组件发现元数据
-    async fn register_discovery_metadata(&self, metadata: DiscoveryMetadata) -> Result<(), ComponentError>;
-    
+    async fn register_discovery_metadata(
+        &self,
+        metadata: DiscoveryMetadata,
+    ) -> Result<(), ComponentError>;
+
     /// 获取组件发现元数据
-    async fn get_discovery_metadata(&self, type_info: &TypeInfo) -> Result<Option<DiscoveryMetadata>, ComponentError>;
-    
+    async fn get_discovery_metadata(
+        &self,
+        type_info: &TypeInfo,
+    ) -> Result<Option<DiscoveryMetadata>, ComponentError>;
+
     /// 获取所有组件发现元数据
     async fn get_all_discovery_metadata(&self) -> Result<Vec<DiscoveryMetadata>, ComponentError>;
-    
+
     /// 根据标签查找组件
     async fn find_by_tag(&self, tag: &str) -> Result<Vec<DiscoveryMetadata>, ComponentError>;
-    
+
     /// 移除组件
     async fn remove_component(&self, type_info: &TypeInfo) -> Result<bool, ComponentError>;
 }
 
 /// 全局组件注册表
-pub static GLOBAL_COMPONENT_REGISTRY: once_cell::sync::Lazy<Arc<dyn ComponentRegistry + Send + Sync>> =
-    once_cell::sync::Lazy::new(|| {
-        Arc::new(InMemoryComponentRegistry::new())
-    });
+pub static GLOBAL_COMPONENT_REGISTRY: once_cell::sync::Lazy<
+    Arc<dyn ComponentRegistry + Send + Sync>,
+> = once_cell::sync::Lazy::new(|| Arc::new(InMemoryComponentRegistry::new()));
 
 /// 内存中的组件注册表实现
 pub struct InMemoryComponentRegistry {
@@ -503,27 +516,30 @@ impl Default for InMemoryComponentRegistry {
 
 #[async_trait]
 impl ComponentRegistry for InMemoryComponentRegistry {
-    async fn register_discovery_metadata(&self, metadata: DiscoveryMetadata) -> Result<(), ComponentError> {
-        let type_info = TypeInfo::new(
-            metadata.reflection.type_id,
-            metadata.reflection.type_name,
-        );
-        
+    async fn register_discovery_metadata(
+        &self,
+        metadata: DiscoveryMetadata,
+    ) -> Result<(), ComponentError> {
+        let type_info = TypeInfo::new(metadata.reflection.type_id, metadata.reflection.type_name);
+
         let mut components = self.components.write().await;
         components.insert(type_info, metadata);
         Ok(())
     }
-    
-    async fn get_discovery_metadata(&self, type_info: &TypeInfo) -> Result<Option<DiscoveryMetadata>, ComponentError> {
+
+    async fn get_discovery_metadata(
+        &self,
+        type_info: &TypeInfo,
+    ) -> Result<Option<DiscoveryMetadata>, ComponentError> {
         let components = self.components.read().await;
         Ok(components.get(type_info).cloned())
     }
-    
+
     async fn get_all_discovery_metadata(&self) -> Result<Vec<DiscoveryMetadata>, ComponentError> {
         let components = self.components.read().await;
         Ok(components.values().cloned().collect())
     }
-    
+
     async fn find_by_tag(&self, tag: &str) -> Result<Vec<DiscoveryMetadata>, ComponentError> {
         let components = self.components.read().await;
         Ok(components
@@ -532,9 +548,26 @@ impl ComponentRegistry for InMemoryComponentRegistry {
             .cloned()
             .collect())
     }
-    
+
     async fn remove_component(&self, type_info: &TypeInfo) -> Result<bool, ComponentError> {
         let mut components = self.components.write().await;
         Ok(components.remove(type_info).is_some())
+    }
+}
+// 为 ComponentScope 实现 FromStr trait 以支持字符串解析
+impl std::str::FromStr for ComponentScope {
+    type Err = ComponentError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "prototype" => Ok(ComponentScope::Prototype),
+            "singleton" => Ok(ComponentScope::Singleton),
+            "request" => Ok(ComponentScope::Request),
+            "session" => Ok(ComponentScope::Session),
+            "application" => Ok(ComponentScope::Application),
+            _ => Err(ComponentError::ParseError {
+                message: format!("Unknown component scope: {}", s),
+            }),
+        }
     }
 }

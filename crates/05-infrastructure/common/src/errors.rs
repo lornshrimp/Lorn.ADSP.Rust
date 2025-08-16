@@ -101,6 +101,18 @@ pub enum ComponentError {
 
     #[error("检测到循环依赖: {cycle}")]
     CircularDependency { cycle: String },
+
+    #[error("条件评估失败: {condition}, 原因: {message}")]
+    ConditionError { condition: String, message: String },
+
+    #[error("解析错误: {message}")]
+    ParseError { message: String },
+
+    #[error("属性提取失败: {message}")]
+    AttributeExtractionError { message: String },
+
+    #[error("Trait 发现失败: {message}")]
+    TraitDiscoveryError { message: String },
 }
 
 impl ComponentError {
